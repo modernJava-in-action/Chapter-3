@@ -43,6 +43,39 @@ Comparator의 compare 메서드 파라미터(사과 두 개)
 화살표(->)는 람다의 파라미터 리스트와 바디를 구분합니다.  
 + 람다 바디  
 두 사과의 무게를 비교합니다. **람다의 반환값**에 해당하는 표현식입니다.  
+  
+Java8에서 지원하는 다섯 가지 람다  표현식 예제  
+```java
+(String s) -> s.length() //String 형식의 파라미터 하나를 가지며 int를 반환한다. return이 함축, return문 명시적으로 사용 안해도 된다.
+(Apple a) -> a,getWeight > 150 //Apple 형식의 파라미터 하나를 가지며 boolean을 반환한다.
+(int x, int y) -> { //int 형식의 파라미터 두 개를 가지며 리턴값이 없다(void)
+  System.out.println("Result:");
+  System.out.println(x + y); //람다 표현식은 여러 행의 문장을 포함할 수 있다.
+}
+() -> 42 //파라미터가 없으며 int 42를 반환한다.
+(Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight()); //Apple형식의 파라미터 두 개를 가지며 int를 반환한다.
+```
+다음은 표현식 스타일 람다라고 알려진 람다의 기본 문법이다.  
+(parameters) -> expression  
+  
+또는 다음처럼 표현할 수 있다(블록 스타일)  
+(parameters) -> { statements; }  
+  
+expression 쉽게 말해 값을 기술하는 것, Statement는 하나의 동작을 기술하는 것입니다.  
+|사용 사례|람다 예제|
+|------|---|
+|불리언 표현식|(List<String> list) -> list.isEmpty()|
+|객체 생성|() -> new Apple(10)|
+|객체에서 소비|(Apple a) -> {System.out.println(a.getWeight());}|
+|객체에서 선택/추출|(String s) -> s.length()|
+|두 값을 조합|(int a, int b) -> a * b|
+|두 객체 비교|(Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight())|
+
+## 3.2 어디에, 어떻게 람다를 사용할까?
+
+
+### 3.2.1 함수형 인터페이스 
+
 
 
 
