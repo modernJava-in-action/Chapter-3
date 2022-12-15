@@ -64,12 +64,12 @@ Java8에서 지원하는 다섯 가지 람다  표현식 예제
 expression 쉽게 말해 값을 기술하는 것, Statement는 하나의 동작을 기술하는 것입니다.  
 |사용 사례|람다 예제|
 |------|---|
-|불리언 표현식|(List<String> list) -> list.isEmpty()|
-|객체 생성|() -> new Apple(10)|
-|객체에서 소비|(Apple a) -> {System.out.println(a.getWeight());}|
-|객체에서 선택/추출|(String s) -> s.length()|
-|두 값을 조합|(int a, int b) -> a * b|
-|두 객체 비교|(Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight())|
+|불리언 표현식|`(List<String> list) -> list.isEmpty()`|
+|객체 생성|`() -> new Apple(10`)|
+|객체에서 소비|`(Apple a) -> {System.out.println(a.getWeight());}`|
+|객체에서 선택/추출|`(String s) -> s.length()`|
+|두 값을 조합|`(int a, int b) -> a * b`|
+|두 객체 비교|`(Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight())`|
 
 ## 3.2 어디에, 어떻게 람다를 사용할까?
 
