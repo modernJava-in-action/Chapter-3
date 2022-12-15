@@ -34,5 +34,16 @@ Comparator<Apple> byWeightWithLambda = (Apple a1, Apple a2) -> a1.getWeight() - 
 람다를 이용하면 `compare 메서드의 바디를 직접 전달하는 것처럼` 코드를 전달할 수 있습니다.  
   
 람다는 **세 부분**으로 이루어집니다.  
+```java
+(Apple a1, Apple a2) -> a1.getWeight() - a2.getWeight();
+```
++ 파라미터 리스트
+  - Comparator의 compare 메서드 파라미터(사과 두 개)  
++ 화살표  
+  - 화살표(->)는 람다의 파라미터 리스트와 바디를 구분합니다.  
++ 람다 바디
+  - 두 사과의 무게를 비교합니다. **람다의 반환값**에 해당하는 표현식입니다.  
+
+
 
 
