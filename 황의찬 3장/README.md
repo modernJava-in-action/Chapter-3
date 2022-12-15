@@ -38,11 +38,11 @@ Comparator<Apple> byWeightWithLambda = (Apple a1, Apple a2) -> a1.getWeight() - 
 (Apple a1, Apple a2) -> a1.getWeight() - a2.getWeight();
 ```
 + 파라미터 리스트
-  - Comparator의 compare 메서드 파라미터(사과 두 개)  
+Comparator의 compare 메서드 파라미터(사과 두 개)  
 + 화살표  
-  - 화살표(->)는 람다의 파라미터 리스트와 바디를 구분합니다.  
+화살표(->)는 람다의 파라미터 리스트와 바디를 구분합니다.  
 + 람다 바디
-  - 두 사과의 무게를 비교합니다. **람다의 반환값**에 해당하는 표현식입니다.  
+두 사과의 무게를 비교합니다. **람다의 반환값**에 해당하는 표현식입니다.  
 
 
 
