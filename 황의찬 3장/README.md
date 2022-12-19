@@ -8,7 +8,19 @@
 깔끔하지 않은 코드는 동작 파라미터를 실전에 적용하는 것을 막는 요소입니다.  
 `더 깔끔한 코드로 동작을 구현하고 전달하는` Java8의 새로운 기능인 람다 표현식을 설명합니다.  
   
-람다 표현식은 `익명 클래스처럼 이름이 없는 함수면서 메서드를 인수로 전달할 수 있습니다.`    
+람다 표현식은 `익명 클래스처럼 이름이 없는 함수면서 메서드를 인수로 전달할 수 있습니다.`  
+# 람다 표현식 요약 
++ 변수에 할당하거나  
+`Runnable r1 = () -> System.out.println("Hello World 1);`
++ 함수형 인터페이스를 인수로 받는 메서드(ex:filterApples)로 전달할 수 있으며  
+```java
+filterApples(inventory, (Apple a) -> a.getWeight() > 150);
+
+static List<Apple> filterApples(List<Apple> inventory, Predicate<Apple> p) {...}
+
+```
++ 함수형 인터페이스의 추상 메서드와 같은 시그니처를 가집니다  
+
 ## 3.1 람다란 무엇인가?
 **람다 표현식은 메서드로 전달할 수 있는 익명 함수를 단순화한 것이라고 할 수 있습니다.**  
 람다 표현식에는 이름은 없지만, `파라미터 리스트, 바디, 반환 형식, 발생할 수 있는 예외 리스트`는 가질 수 있습니다.  
@@ -110,6 +122,83 @@ public interface Predicate<T> {
   }
 ```
 ### 3.2.2 함수 디스크립터 
+함수형 인터페이스의 추상 메서드 시그니처는 람다 표현식의 시그니처를 가리킵니다.  
+람다 표현식의 시그니처를 서술하는 메서드를 `함수 디스크립터` 라고 부릅니다.  
+  
+`() -> void` 표기는 파라미터 리스트가 없으며 void를 반환하는 함수를 의미합니다. 즉, Runnable의 run이 이에 해당합니다.  
+`(Apple, Apple) -> int`는 두 개의 Apple을 인수로 받아 int를 반환하는 함수를 가리킵니다.  
+  
+람다 표현식은 변수에 할당하거나 함수형 인터페이스를 인수로 받는 메서드로 전달할 수 있으며, 함수형 인터페이스의 추상 메서드와  
+같은 시그니처를 가집니다.  
+  
+```java
+public void process(Runnable r) {
+  r.run();
+}
+process(() -> System.out.println("This is awesome!!"));
+```
+위 코드를 실행하면 "This is awesome!!"이 출력됩니다.  
+`() -> System.out.println(....)`은 인수가 없으며 void를 반환하는 람다 표현식입니다. 이는 Runnable 인터페이스의 run 메서드 시그니처와 같습니다.  
+  
+여러 개의 디폴트 메서드가 있더라도 **추상 메서드가 오직 하나면 함수형 인터페이스**입니다.  
+
+### @FunctionalInterface
+@FunctionalInterface는 함수형 인터페이스를 가리키는 어노테이션입니다.  
+@FunctionalInterface로 인터페이스를 선언했지만 실제로 함수형 인터페이스가 아니면 컴파일러가 에러를 발생시킵니다.  
+
+## 3.3 람다 활용 : 실행 어라운드 패턴 
+순환 패턴은 자원을 열고, 처리한 다음에, 자원을 닫는 순서로 이루워집니다.  
+즉, 실제 자원을 처리하는 코드를 설정과 정리 두 과정이 둘러싸는 형태를 가집니다.  
+  
+```java 
+public String processFile() throws IOException {
+  try (BufferedReader br = new BufferedReader(new FileReader("data.txt"))) { // 파일에서 한 행을 읽는 코드 
+    return br.readLine(); //실제 필요한 작업을 하는 행 
+  }
+}
+```
+다음과 같은 코드가 필요합니다.  
+processFile 메서드가 한 번에 두 행을 읽게 하려면 코드를 어떻게 고쳐야 할까요?  
+우선 BufferedReader를 인수로 받아서 String을 반환하는 람다가 필요합니다.  
+```java
+String result = processFile((BufferedReader br) -> br.readLine() + br.readLine());
+```
+
+함수형 인터페이스 자리에 람다를 사용할 수 있습니다. 따라서 BufferedReader -> String과 IOException을 던질 수 있는 시그니처와  
+일치하는 함수형 인터페이스를 만들어야 합니다.
+```java
+@FunctionalInterface //실제로 함수형 인터페이스가 아니라면 컴파일러가 예외를 발생시킴
+  public interface BufferedReaderProcessor {
+    String process(BufferedReader b) throws IOException; // BufferedReader -> String
+}
+```
+정의한 인터페이스를 processFile 메서드의 인수로 전달할 수 있습니다.  
+```java
+public String processFile(BufferedReaderProcessor p) throws Exception {
+
+}
+```
+이제 BufferedReaderProcessor에 정의된 process 메서드의 시그니처 (BufferedReader -> String) 과 일치하는 람다를 전달할 수 있습니다.  
+**람다 표현식으로 함수형 인터페이스의 추상 메서드 구현을 직접 전달할 수 있으며 전달된 코드는 함수형 인터페이스의 인스턴스로 전달된 코드와 같은 방식으로 처리됩니다.**  
+```java
+public static String processFile(BufferedReaderProcessor p) throws IOException {
+    try (BufferedReader br = new BufferedReader(new FileReader("data.txt"))) {//한 행을 읽는 코드
+      return p.process(br);
+    }
+}
+```
+요약하자면, 함수형 인터페이스를 인수로 받는 메서드에 람다를 전달할 수 있습니다.  
+람다 표현식으로 함수형 인터페이스의 추상 메서드 구현을 직접 전달할 수 있습니다.  
+## 3.4 함수형 인터페이스 사용 
+
+
+
+
+
+
+
+  
+
 
 
 
