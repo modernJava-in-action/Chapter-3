@@ -190,6 +190,151 @@ public static String processFile(BufferedReaderProcessor p) throws IOException {
 요약하자면, 함수형 인터페이스를 인수로 받는 메서드에 람다를 전달할 수 있습니다.  
 람다 표현식으로 함수형 인터페이스의 추상 메서드 구현을 직접 전달할 수 있습니다.  
 ## 3.4 함수형 인터페이스 사용 
+함수형 인터페이스의 추상 메서드는 람다 표현식의 시그니처를 묘사합니다.  
+함수형 인터페이스의 추상 메서드 시그니처를 **함수 디스크립터** 라고 합니다.  
+이미 자바 API는 Comparable, Runnable, Callable 등의 다양한 함수형 인터페이스를 포함하고 있습니다.  
+  
+### 3.4.1 Predicate
+`java.util.function.Predicate<T>` 인터페이스는 test라는 추상 메서드를 정의하며 test는 제네릭 형식 T의 객체를 인수로 받아 **불리언을 반환합니다.**    
+T 형식의 객체를 사용하는 불리언 표현식이 필요한 상황에서 Predicate를 사용할 수 있습니다.  
+```java
+@FunctionalInterface
+public interface Predicate<T> {
+  boolean test(T t);
+}
+```
+활용은 다음과 같이 사용할 수 있습니다.
+```java
+public class PredicateTest {
+
+  public static void main(String[] args) {
+
+    List<String> listOfStrings = new ArrayList<>(List.of("hello"));
+
+    Predicate<String> nonEmptyStringPredicate = (String s) -> !s.isEmpty();
+    List<String> nonEmpty = filter(listOfStrings, nonEmptyStringPredicate);
+    System.out.println(nonEmpty);
+  }
+
+  public static <T> List<T> filter(List<T> list, Predicate<T> p) {
+    List<T> results = new ArrayList<>();
+    for (T t : list) {
+      if (p.test(t)) {
+        results.add(t);
+      }
+    }
+    return results;
+  }
+
+}
+```
+### 3.4.2 Consumer
+`java.util.function.Consumer<T>` 인터페이스는 제네릭 형식 T 객체를 받아서 **void를 반환**하는 accept라는 추상 메서드를 정의합니다.  
+T 형식의 객체를 인수로 받아서 어떤 동작을 수행하고 싶을 때 Consumer 인터페이스를 사용할 수 있습니다.  
+예를 들어 Integer 리스트를 인수로 받아서 각 항목에 어떤 동작을 수행하는 forEach 메서드를 정의할 때 Consumer를 활용할 수 있습니다.  
+```java
+@FunctionalInterface
+public interface Consumer<T> {
+  void accept(T t);
+}
+```
+활용은 다음과 같이 할 수 있습니다.  
+```java
+/**
+ * Consumer<T>
+ * 제네릭 형식 T 객체를 받아서 void를 반환하는 accept라는 추상 메서드를 정의
+ */
+public class ConsumerTest {
+
+  public static void main(String[] args) {
+    forEach(Arrays.asList(1, 2, 3, 4, 5),
+        (Integer i) -> System.out.println(i)); //Consumer의 accept를 구현하는 람다
+  }
+  
+  public static <T> void forEach(List<T> list, Consumer<T> c) {
+    for (T t : list) {
+      c.accept(t);
+    }
+  }
+}
+```
+### 3.4.3 Function
+`java.util.function.Function<T, R>` 인터페이스는 **제네릭 형식 T를 인수로 받아서 제네릭 형식 R 객체를 반환하는 추상 메서드 apply를 정의합니다.**  
+입력을 출력으로 매핑하는 람다를 정의할 때 Function 인터페이스를 활용할 수 있습니다.  
+```java
+@FunctionalInterface
+public interface Function<T, R> {
+  R apply(T t);
+}
+```
+활용은 다음과 같습니다.  
+```java
+public class Functiontest {
+
+  public static void main(String[] args) {
+    List<Integer> length = map(Arrays.asList("lambdas", "in", "action"),
+        (String s) -> s.length());
+
+    System.out.println(length); //[7, 2, 6]
+  }
+
+  public static <T, R> List<R> map(List<T> list, Function<T, R> f) {
+    List<R> result = new ArrayList<>();
+    for (T t : list) {
+      result.add(f.apply(t));
+    }
+    return result;
+  }
+}
+```
+### 기본형 특화
+제네릭 파라미터(예를 들어 `Consumer<T>`의 `T`)에는 참조형만 사용할 수 있습니다.  
+기본형을 참조형으로 변환하는 기능을 박싱, 참조형을 기본형으로 변환하는 반대 동작을 언박싱이라고 합니다.  
+또한 프로그래머가 편리하게 코드를 구현할 수 있도록 박싱과 언박싱이 자동으로 이루어지는 **오토박싱**이라는 기능도 제공합니다.  
+```java
+List<Integer> list = new ArrayList<>();
+for (int i = 300; i < 400; i++) {
+  list.add(i);
+}
+```
+하지만 이런 변환 과정은 비용이 소모됩니다. 박싱한 값은 기본형을 감싸는 `래퍼`이며 `힙`에 저장됩니다.  
+따라서 박싱한 값은 메모리를 더 소비하며 기본형을 가져올 때도 메모리를 탐색하는 과정이 필요합니다.  
+
+Java8에서는 기본형을 입출력으로 사용하는 상황에서 오토박싱 동작을 피할 수 있도록 특별한 버전의 함수형 인터페이스를 제공합니다.  
+```java
+IntPredicate evenNumbers = (int i) -> i % 2 == 0;
+System.out.println(evenNumbers.test(1000)); //참(박싱 없음)
+
+Predicate<Integer> oddNumbers = (Integer i) -> i % 2 != 0;
+System.out.println(oddNumbers.test(1000)); //거짓(박싱)
+```
+(T, U) -> R은 제네릭 형식 T와 U를 인수로 받으며 R을 반환하는 함수입니다.  
+|사용 사례|람다 예제|대응하는 함수형 인터페이스|
+|------|---|---|
+|불리언 표현|`(List<String> list) -> list.isEmpty()`|`Predicate<List<String>>`|
+|객체 생성|() -> new Apple(10)|`Supplier<Apple>`|
+|객체에서 소비|(Apple a) -> System.out.println(a.getWeight())|`Consumer<Apple>`|
+
+### 예외, 람다, 함수형 인터페이스의 관계
+함수형 인터페이스는 확인된 예외를 던지는 동작을 허용하지 않습니다.  
+즉, 예외를 던지는 람다 표현식을 만드려면 확인된 예외를 선언하는 함수형 인터페이스를 직접 정의하거나 람다를 try/catch 블록으로 감싸야 합니다.  
+  
+API를 사용하는 경우, 명시적으로 확인된 예외를 잡을 수 있다.  
+```java
+Function<BufferedReader, String> f = (BufferedReader b) -> {
+  try {
+    return b.readLine();
+  }
+  catch (IOException e) {
+    throw new RuntimeException(e);
+  }
+}
+```
+## 3.5 형식 검사, 형식 추론, 제약 
+
+
+
+ 
 
 
 
