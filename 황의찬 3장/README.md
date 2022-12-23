@@ -332,6 +332,8 @@ Function<BufferedReader, String> f = (BufferedReader b) -> {
 ```
 ## 3.5 형식 검사, 형식 추론, 제약 
 
+## 3.6 메서드 참조
+
 
 
  
