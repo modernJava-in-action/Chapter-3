@@ -415,6 +415,29 @@ public static Fruit giveMeFruit(String fruit, Integer weight) {
 ```
 생성자 참조 문법은 `ClassName::new`입니다.  
 ## 3.7 람다, 메서드 참조 활용하기
+어떻게 sort 메서드에 정렬 전략을 전달할 수 있을까요?  sort 메서드는 다음과 같은 시그니처를 가집니다.  
+`void sort(Comparator<? super E> c)`  
+Comparator 객체를 인수로 받아 두 사과를 비교합니다.  
+  
+객체 안에 동작을 포함시키는 방식으로 다양한 전략을 전달할 수 있습니다.  
+이제 sort의 동작은 **파라미터화되었다**라고 말할 수 있습니다. 즉, sort에 전달된 정렬 전략에 따라 sort의 동작이 달라질 것입니다.  
+```java
+list.sort((Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight()));
+list.sort((a1, a2) -> a1.getWeight().compareTo(a2.getWeight())); 
+```
+자바 컴파일러는 람다 표현식이 사용된 콘텍스트를 활용해서 람다의 파라미터 형식을 추론합니다.  
+Comparator는 Comparable 키를 추출해서 Comparator 객체로 만드는 Function 함수를 인수로 받는 정적 메서드 comparing을 포함합니다.  
+```java
+Comparator<Apple> c = comparing((Apple a) -> a.getWeight());
+inventory.sort(comparing(apple -> apple.getWeight()));
+```
+람다 표현식은 사과를 비교하는데 사용할 키를 어떻게 추출할 것인지 지정하는 한 개의 인수만 포함합니다.  
+```java
+inventory.sort(comparing(Apple::getWeight));
+```
+코드 자체로 Apple을 무게(Weight)별로 비교해서 inventory를 sort하라는 의미를 전달할 수 있습니다.  
+## 3.8 람다 표현식을 조합할 수 있는 유용한 메서드
+
 
 
 
