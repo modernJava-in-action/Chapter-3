@@ -333,6 +333,89 @@ Function<BufferedReader, String> f = (BufferedReader b) -> {
 ## 3.5 형식 검사, 형식 추론, 제약 
 
 ## 3.6 메서드 참조
+메서드 참조를 이용하면 기존의 메서드 정의를 재활용해서 람다처럼 전달할 수 있습니다.  
+```java  
+inventory.sort((Apple a1, Apple a2) -> a1.getWeight().compareTo(a2.getWeight())); //기존 코드
+inventory.sort(Comparator.comparing(Apple::getWeight)); //메서드 참조와 java.util.Comparator.comparing을 활용한 코드
+```  
+### 3.6.1 요약
+메서드 참조는 **특정 메서드만을 호출하는 람다의 축약형**이라고 생각할 수 있습니다.  
+예를 들어 람다가 이 메서드를 직접 호출해 라고 명령한다면 이 메서드를 어떻게 호출해야 하는지 설명을 참조하기보다는 메서드명을 직접 참조하는 것이 편리합니다.  
+  
+메서드 참조의 유형은 다음과 같습니다.
+1. 정적 메서드 참조  
+예를 들어 Integer의 pareseInt 메서드는 `Integer::parseInt` 로 표현할 수 있습니다.  
+2. 다양한 형식의 인스턴스 메서드 참조  
+예를 들어 String의 length 메서드는 `String::length`로 표현할 수 있습니다.  
+3. 기존 객체의 인스턴스 메서드 참조  
+예를 들어 Transaction 객체를 할당받은 expensiveTranscation 지역 변수가 있고, Transcation 객체에는 getValue 메서드가 있다면 이를 `expensiveTranscation::getValue`  
+라고 표현할 수 있습니다.  
+  
+세 번째 유형의 메서드 참조는 람다 표현식에서 현존하는 외부 객체의 메서드를 호출하는 데 사용됩니다.  
+예를 들어 () -> expensiveTranscation.getValue()라는 람다 표현식을 expensiveTranscation::getValue로 줄여서 표현할 수 있습니다.  
+  
+예를 들어 다음처럼 isValid 라는 헬퍼 메서드를 정의했다고 가정해봅니다.  
+```java
+private boolean isValidName(String string) {
+  return Character.isUpperCase(string.charAt(0));
+}
+```  
+이제 `Predicate<String>`을 필요로 하는 상황에서 메서드 참조를 사용할 수 있습니다.  
+`filter(words, this::isValidName)`  
+  
+컴파일러는 람다 표현식의 형식을 검사하던 방식과 비슷한 과정으로 **메서드 참조가 주어진 함수형 인터페이스와 호환하는지 확인합니다.**  
+즉, 메서드 참조는 콘텍스트의 형식과 일치해야 합니다.  
+### 3.6.2 생성자 참조 
+```java
+Supplier<Apple> c1 = Apple::new; //() -> Apple(T) 와 같은 시그니처 갖는 생성자 있다고 가정.
+Apple a1 = c1.get();
+```
+Supplier의 get 메서드를 호출해서 새로운 Apple 객체를 만들 수 있습니다.  
+  
+Apple(Integer weight)라는 시그니처를 갖는 생성자는 Function 인터페이스의 시그니처와 같습니다.  
+따라서 다음과 같은 코드를 구현할 수 있습니다.  
+```java
+Function<Integer, Apple> c2 = Apple::new;
+Apple a2 = c2.apply(110); // Function 의 apply 메서드에 무게를 인수로 호출해서 새로운 Apple 객체를 만들 수 있다.
+```
+  
+사용 예제는 다음과 같습니다.  
+```java
+List<Integer> weights = Arrays.asList(7, 3, 4, 10);
+List<Apple> apples = map(weights, Apple::new);
+
+public static List<Apple> map(List<Integer> list, Function<Integer, Apple> f) {
+  List<Apple> result = new ArrayList<>();
+  for (Integer i : list) {
+    result.add(f.apply(i));
+  }
+  return result;
+}
+```
+Apple(String color, Integer weight)처럼 두 인수를 갖는 생성자는 BiFunction 인터페이스와 같은 시그니처를 가지므로. `(T,U -> R)` 다음처럼 할 수 있습니다.  
+```java
+BiFunction<Color, Integer, Apple> c3 = Apple::new;
+Apple a3 = c3.apply(Color.GREEN, 110);
+```
+인스턴스화하지 않고도 생성자에 접근할 수 있는 기능을 다양한 상황에 응용할 수 있습니다.  
+예를 들어 Map으로 생성자와 문자열값을 관련시킬 수 있습니다. 그리고 String과 Integer가 주어졌을 때 다양한 무게를 갖는 여러 종류의 과일을 만드는  
+giveMeFruit라는 메서드를 만들 수 있습니다.  
+```java
+static Map<String, Function<Integer, Fruit>> map = new HashMap<>();
+static {
+  map.put("apple", Apple::new);
+  map.put("orange", Orange::new);
+  //등등 
+}
+
+public static Fruit giveMeFruit(String fruit, Integer weight) {
+  return map.get(fruit.toLowerCase()) //map에서 Function<Integer, Fruit>를 얻었습니다.
+        .apply(weight) //Function의 apply 메서드에 정수 무게 파라미터를 제공해서 Fruit를 만들 수 있습니다.
+}
+```
+생성자 참조 문법은 `ClassName::new`입니다.  
+## 3.7 람다, 메서드 참조 활용하기
+
 
 
 
