@@ -332,6 +332,7 @@ Function<BufferedReader, String> f = (BufferedReader b) -> {
 ```
 ## 3.5 형식 검사, 형식 추론, 제약 
 
+
 ## 3.6 메서드 참조
 메서드 참조를 이용하면 기존의 메서드 정의를 재활용해서 람다처럼 전달할 수 있습니다.  
 ```java  
@@ -436,7 +437,103 @@ inventory.sort(comparing(apple -> apple.getWeight()));
 inventory.sort(comparing(Apple::getWeight));
 ```
 코드 자체로 Apple을 무게(Weight)별로 비교해서 inventory를 sort하라는 의미를 전달할 수 있습니다.  
-## 3.8 람다 표현식을 조합할 수 있는 유용한 메서드
+## 3.8 람다 표현식을 조합할 수 있는 유용한 메서드  
+예를 들어 두 프리디케이트를 조합해서 두 프리디케이트의 or 연산을 수행하는 커다란 프리디케이트를 만들 수 있습니다.  
+또한 한 함수의 결과가 다른 함수의 입력이 되도록 두 함수를 조합할 수 있습니다.  
+  
+### 3.8.1 Comparator 조합
+`Comparator.comparing`을 이용해서 비교에 사용할 키를 추출하는 Function 기반의 Comparator를 반환할 수 있습니다.  
+```java
+Comparator<Apple> c = comparing((Apple a) -> a.getWeight());
+```
+역정렬은 다음과 같이 가능합니다.
+```java
+inventory.sort(comparing(Apple::getWeight).reversed());
+```
+다른 Comparator 인스턴스를 만들 필요가 없습니다. 인터페이스 자체에서 주어진 비교자의 순서를 뒤바꾸는 reverse라는 디폴트 메서드를 제공하기 때문입니다.  
+  
+예를 들어 무게가 같은 두 사과가 존재할 때 , 두 번째 Comparator를 만들 수 있습니다.  
+`thenComparing` 메서드로 두 번째 비교자를 만들 수 있습니다.  
+```java
+inventory.sort(comparing(Apple::getWeight)
+    .reversed()
+    .thenComparing(Apple::getCountry));
+```
+thenComparing은 함수를 인수로 받아 첫 번째 비교자를 이용해서 두 객체가 같다고 판단되면 두 번째 비교자에 객체를 전달합니다.  
+  
+### 3.8.2 Predicate 조합
+Predicate 인터페이스는 복잡한 프레디케이트를 만들 수 있도록 `negate, and, or` 세 가지 메서드를 제공합니다.  
+`Predicate<Apple> redApple = (apple -> apple.getColor().name().equals("RED"));`기본 조건이 다음과 같을 때,(빨간색인 사과)  
+`빨간색이 아닌 사과`처럼 특정 프레디케이트를 반전시킬 때 negate 메서드를 사용할 수 있습니다.  
+```java
+Predicate<Apple> notRedApple = redApple.negate(); //기존 프레디케이트 객체 redApple의 결과를 반전시킨 객체를 만든다.
+```
+또한 and 메서드를 이용해서 빨간색이면서 무거운 사과를 선택하도록 두 람다를 조합할 수 있습니다.  
+```java
+Predicate<Apple> readAndHeavyApple = redApple.and(apple -> apple.getWeight() > 150);
+```
+그뿐만 아니라 or을 이용해서 `빨간색이면서 무거운(150그램 이상) 사과 또는 그냥 녹색 사과` 등 다양한 조건을 만들 수 있습니다.  
+```java
+Predicate<Apple> redAndHeavyAppleOrGreen = redApple.and(apple -> apple.getWeight() > 150)
+        .or(apple -> GREEN.equals(apple.getColor()));
+```
+람다 표현식을 조합해서 더 복잡한 람다 표현식을 만들 수 있기 때문에 대단합니다.  
+  
+### 3.8.3 Function 조합 
+Function 인터페이스는 Funtion 인스턴스를 반환하는 `andThen, compose` 두 가지 디폴트 메서드를 제공합니다.  
+andThen 메서드는 주어진 함수를 먼저 적용한 결과를 다른 함수의 입력으로 전달하는 함수를 반환합니다.  
+```java
+Function<Integer, Integer> f = x -> x + 1;
+Function<Integer, Integer> g = x -> x * 2;
+Function<Integer, Integer> h = f.andThen(g); //f를 먼저 적용한 결과를 g에 대입 
+Integer result = h.apply(1);
+System.out.println(result); // 4를 반환 
+```
+compose 메서드는 인수로 주어진 함수를 먼저 실행한 다음에 그 결과를 외부 함수의 인수로 제공합니다.  
+```java
+Function<Integer, Integer> f = x -> x + 1;
+Function<Integer, Integer> g = x -> x * 2;
+Function<Integer, Integer> h = f.compose(g); //g를 먼저 실행, 그 결과를 외부 함수의 인수로 제공
+Integer res = h.apply(1); // 3을 반환
+System.out.println(res);
+```
+사용 예시는 다음과 같습니다.  
+```java
+public class Letter {
+  public static String addHeader(String text) {
+    return "From Raoul, Mario and Alan: " + text;
+  }
+
+  public static String addFooter(String text) {
+    return text + " Kind regards";
+  }
+
+  public static String checkSpelling(String text) {
+    return text.replaceAll("labda", "lambda"); //대상 문자열을 원하는 문자 값으로 변환하는 함수
+    //replaceAll()은 정규표현식 사용이 가능합니다.
+  }
+}
+```
+유틸리티 메서드를 조합해서 다양한 변환 파이프라인을 만들 수 있습니다.  
+헤더를 추가(addHeader)한 다음에, 철자 검사(checkSpelling)를 하고, 마지막에 푸터를 추가(addFooter)할 수 있습니다.  
+```java
+Function<String, String> addHeader = Letter::addHeader;
+Function<String, String> transformationPipeline = addHeader.andThen(Letter::checkSpelling)
+    .andThen(Letter::addFooter);
+```
+다음과 같이 철자 검사는 빼고 헤더와 푸터만 추가하는 파이프라인도 만들 수 있습니다.  
+```java
+Function<String, String> transformationPipeline = addHeader.andThen(Letter::addFooter);
+```
+## 3.10 마치며
++ 람다 표현식은 익명 함수의 일종입니다. 이름은 없지만, 파라미터 리스트, 바디, 반환 형식을 가지며 예외를 던질 수 있습니다.  
++ 함수형 인터페이스는 하나의 추상 메서드만을 정의하는 인터페이스입니다.  
++ 함수형 인터페이스를 기대하는 곳에서만 람다 표현식을 사용할 수 있습니다.  
++ 람다 표현식을 이용해서 함수형 인터페이스의 추상 메서드를 즉석으로 제공할 수 있으며 **람다 표현식 전체가 함수형 인터페이스의 인스턴스로 취급**됩니다.  
++ 메서드 참조를 이용하면 기존의 메서드 구현을 재사용하고 직접 전달할 수 있습니다.  
++ Comparator, Predicate, Function 같은 함수형 인터페이스는 람다 표현식을 조합할 수 있는 다양한 디폴트 메서드를 제공합니다.  
+
+
 
 
 
